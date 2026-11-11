@@ -1,0 +1,19 @@
+{
+  "rules": {
+    "botNames": ["女仆酱", "小蓝"],
+    "continuationWindowMs": 120000
+  },
+  "judge": {
+    "baseUrl": "http://127.0.0.1:11447",
+    "timeoutMs": 5000,
+    "onError": "skip"
+  },
+  "chat": {
+    "baseUrl": "http://127.0.0.1:11450/v1",
+    "apiKey": "",
+    "model": "local",
+    "temperature": 0.75,
+    "topP": 0.85,
+    "maxTokens": 160
+  }
+}
