@@ -80,6 +80,10 @@ The suite covers text normalization, mention stripping, bot-name matching, noise
 
 This repository is the reusable core extracted from a deployed QQ assistant. The full deployment adds persona, memory, image tagging, and a 30B generator; none of that is needed to study or reuse the addressedness gate.
 
+## Wiring it into a real bot
+
+The library only decides; you still need a bot process to receive events and send replies. `docs/integration.md` describes the three fields the gate needs, how to map them from OneBot/NapCat, Telegram, and Discord, and the common pitfalls (mentions leaking into `text`, self-messages, duplicate events, stale context).
+
 ## Reproducing the reference judge
 
 The judge is a Qwen2.5-7B model adapted with LoRA and exported to OpenVINO INT4. The scripts to merge an adapter, export, and serve it are in `scripts/`; the full recipe (base version, merge, export flags, serving, and what can and cannot be reproduced) is in `docs/reproduce-judge.md`.
@@ -119,6 +123,7 @@ Both ship with `MODEL_CARD.md` (training, evaluation, limitations). To use the a
 ## License
 
 MIT.
+
 
 
 
