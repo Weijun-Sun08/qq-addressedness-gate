@@ -53,9 +53,14 @@ The TF-IDF baseline drops by about ten points under a temporal split, while the 
 
 We thank the developers of the open-source models and tooling used in the reference deployment. (Add funding or personal acknowledgements here.)
 
+## AI usage disclosure
+
+The text of this paper was drafted and translated with the assistance of a large language model. The author reviewed and edited all content, verified every experiment, number, and reference, and takes full responsibility for the accuracy of the paper. The software implementation and experiments were carried out by the author.
+
 ## References
 
 See `paper.bib`.
+
 
 
 
