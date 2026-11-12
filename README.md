@@ -92,9 +92,23 @@ python scripts/judge_server.py --model ./ov-int4 --port 11447
 
 `scripts/sample.jsonl` shows the record format; `scripts/sample-500.jsonl` is a 500-row anonymised convenience sample (digits, URLs, e-mails and @-mentions replaced).
 
-## Adapter weights
+## Model weights
 
-The reference judge adapter (154 MB, QLoRA on Qwen2.5-7B-Instruct) is distributed separately from this repository; the base model is public. The adapter ships with a `MODEL_CARD.md` describing training, evaluation, and limitations. Use `scripts/merge_lora.py` to attach it to the base, then follow `docs/reproduce-judge.md`.
+Two packages are distributed outside the repository:
+
+| Package | Size | Where |
+|---|---|---|
+| LoRA adapter (`qq-judge-lora-v1.2.zip`) | 145 MB | [GitHub Releases](https://github.com/Weijun-Sun08/qq-addressedness-gate/releases/tag/v0.1.2) / [Quark drive](https://pan.quark.cn/s/0191d4299cfd) (code `RdLM`) / [OneDrive](https://1drv.ms/f/c/79b25f680ce98041/IgB26zQ7KBO7R4d8LCxYtIqKARAkxiqC_DgEyeNhkuTMAow?e=y2y2Tb) |
+| OpenVINO INT4 model (`qq-judge-ov-int4-v1.2b.7z`) | 3.8 GB | [Quark drive](https://pan.quark.cn/s/0191d4299cfd) (code `RdLM`, China) / [OneDrive](https://1drv.ms/f/c/79b25f680ce98041/IgB26zQ7KBO7R4d8LCxYtIqKARAkxiqC_DgEyeNhkuTMAow?e=y2y2Tb) |
+
+Checksums (SHA256):
+
+```
+adapter  24653DC48E2A21286A0DBE368A5A85B705BE247CAFBA97F11BB791E1A6F84DAF
+model    FD4C9E82ED2D42C2F175960AA17A007F752EF0C0B66471FB85CB74ADD8D21B24
+```
+
+Both ship with `MODEL_CARD.md` (training, evaluation, limitations). To use the adapter, run `scripts/merge_lora.py` then follow `docs/reproduce-judge.md`; to use the exported model, unpack it and run `scripts/judge_server.py --model <dir>`.
 
 ## Limitations
 
@@ -105,6 +119,11 @@ The reference judge adapter (154 MB, QLoRA on Qwen2.5-7B-Instruct) is distribute
 ## License
 
 MIT.
+
+
+
+
+
 
 
 

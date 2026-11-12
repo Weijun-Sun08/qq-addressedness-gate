@@ -1,6 +1,20 @@
-# 复现判官模型（7B LoRA → OpenVINO INT4）
+﻿# 复现判官模型（7B LoRA → OpenVINO INT4）
 
 本文说明如何从公开的基座模型 + 适配器复现参考判官。默认在 Linux 或 Windows + Python 3.10+ 下操作。
+
+## 下载
+
+```
+适配器（145MB）
+  GitHub Release：https://github.com/Weijun-Sun08/qq-addressedness-gate/releases/tag/v0.1.2
+  夸克网盘：https://pan.quark.cn/s/0191d4299cfd  提取码 RdLM
+
+导出好的 OpenVINO INT4 模型（3.8GB，解压即用）
+  夸克网盘：https://pan.quark.cn/s/0191d4299cfd  提取码 RdLM
+  OneDrive：https://1drv.ms/f/c/79b25f680ce98041/IgB26zQ7KBO7R4d8LCxYtIqKARAkxiqC_DgEyeNhkuTMAow?e=y2y2Tb
+
+校验值见各包的 README，或 README.md 里的 SHA256。
+```
 
 ## 0. 需要什么
 
@@ -111,3 +125,5 @@ epochs    1
 · 适配器/合并模型：随本项目以 Apache 2.0 发布，保留 Qwen 版权声明
 · 训练数据（聊天记录）不发布
 ```
+
+
