@@ -55,6 +55,21 @@ test('判官说不接时保持沉默', async () => {
   chat.srv.closeAllConnections(); chat.srv.close();
 });
 
+test('聊天返回空不算成功', async () => {
+  const chat = await listen((req, res) => {
+    res.writeHead(200, { 'content-type': 'application/json' });
+    res.end(JSON.stringify({ choices: [{ message: { content: '' } }] }));
+  });
+  const gate = createGate({
+    rules: { botNames: ['小蓝'], trustRuleReplies: true },
+    chat: { baseUrl: `http://127.0.0.1:${chat.port}/v1` },
+  });
+  const out = await gate.handleMessage({ text: '小蓝在吗', who: '群友' });
+  assert.equal(out.replied, false);
+  assert.equal(out.reason, 'chat-failed');
+  chat.srv.closeAllConnections(); chat.srv.close();
+});
+
 test('判官挂了默认沉默（不乱插嘴）', async () => {
   const gate = createGate({
     rules: { botNames: ['小蓝'] },

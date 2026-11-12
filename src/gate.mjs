@@ -22,10 +22,15 @@ export function createGate(config = {}) {
       const j = await judge.judge({ who, text, ctx });
       if (!j.reply) return { replied: false, decision: 'skip', reason: 'judge', judge: j };
     }
-    const out = await chat.complete([
+    let out = '';
+    try {
+      out = await chat.complete([
       { role: 'system', content: cfg.rules.systemPrompt || '你是一个群聊助手，用简短自然的中文回复。' },
-      { role: 'user', content: (ctx.length ? ctx.join('\n') + '\n' : '') + `${who}: ${text}` },
-    ]);
+        { role: 'user', content: (ctx.length ? ctx.join('\n') + '\n' : '') + `${who}: ${text}` },
+      ]);
+    } catch (err) {
+      return { replied: false, decision: 'error', reason: 'chat-failed', error: String(err) };
+    }
     return { replied: true, decision: 'reply', reason: ruled.reason, text: out };
   }
 

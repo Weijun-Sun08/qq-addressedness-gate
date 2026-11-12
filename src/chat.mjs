@@ -34,7 +34,10 @@ export function createChat(config = {}) {
       });
       if (!res.ok) throw new Error(`chat http ${res.status}`);
       const data = await res.json();
-      return String(data?.choices?.[0]?.message?.content ?? '').trim();
+      const text = String(data?.choices?.[0]?.message?.content ?? '').trim();
+      // 空回复不能当成成功，否则上层会发一条空消息（2026-11-12）
+      if (!text) throw new Error('chat returned empty content');
+      return text;
     } finally {
       clearTimeout(timer);
     }

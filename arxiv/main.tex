@@ -1,0 +1,114 @@
+﻿\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{natbib}
+\usepackage{xcolor}
+
+\title{Deciding When a Group-Chat Bot Should Speak:\\
+A Reproducible Gate for Addressedness}
+\author{Weijun Sun\\
+Central South University, Changsha, China\\
+\href{https://github.com/Weijun-Sun08/qq-addressedness-gate}{\texttt{Weijun-Sun08/qq-addressedness-gate}}}
+\date{2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Group-chat agents fail in a characteristic way: they answer messages that were never addressed to them.
+We study the addressedness decision in isolation---given a message, its speaker, and a short context, should a bot reply?---and release a small, dependency-free implementation with three replaceable parts: a rule layer, an HTTP judge that answers the binary question, and an OpenAI-compatible chat client.
+On 574 human-confirmed messages from a deployed assistant, a rules-only policy reaches 76.8\% accuracy with high precision (94.1\%) but low recall (50.4\%), while a 7B judge reaches 96.5\% accuracy, 99.2\% precision and 92.9\% recall at a median latency of 0.46\,s on CPU.
+A character n-gram classifier matches the judge in-distribution (97.6\%) but drops to 87.8\% under a temporal split, whereas the judge's errors concentrate on third-person mentions and image messages.
+We release the evaluation harness, the metric definitions, and the dataset schema so that addressedness strategies can be compared without rebuilding the surrounding bot.
+\end{abstract}
+
+\section{Introduction}
+Conversational agents deployed in group chats must decide, for every message, whether they are being addressed.
+Answering too often is intrusive; answering too rarely makes the agent useless.
+Most frameworks fold this decision into the transport and the generator, which makes strategies hard to compare and results hard to reproduce.
+
+We isolate the decision as a binary classification problem and provide a reference implementation with a deliberately narrow interface.
+Our contributions are:
+(i) a formulation of addressedness gating with explicit failure semantics (silence when the judge is unavailable);
+(ii) a small library whose judge and generator are interchangeable; and
+(iii) an offline evaluation on real group-chat traffic comparing rules, a classical classifier, and a small language model.
+
+\section{Related Work}
+Multi-party dialogue requires tracking who is being addressed; addressee identification has been studied as a task in its own right.
+Open-source frameworks such as Rasa~\citep{rasa2017} support building dialogue agents but do not expose the addressedness decision as a reusable component.
+Deployed bots typically rely on mentions or keyword matching, which are cheap but brittle for third-person references.
+
+\section{Method}
+The gate has three layers.
+
+\paragraph{Rules.}
+A message is \emph{skipped} if it contains no alphanumeric or CJK characters (punctuation-only messages), and treated as an explicit call if it mentions the bot or contains a configured name.
+All remaining messages are delegated to the judge.
+
+\paragraph{Judge.}
+The judge is an HTTP service: \texttt{POST /judge} with \texttt{\{who, text, ctx\}} returns \texttt{\{"answer": "yes"|"no"\}}.
+The reference implementation serves a Qwen2.5-7B~\citep{qwen25} model adapted with LoRA~\citep{lora} and exported to OpenVINO INT4 on CPU.
+If the service is unavailable, the gate stays silent.
+
+\paragraph{Generation.}
+When the gate decides to reply, the message is sent to an OpenAI-compatible \texttt{/chat/completions} endpoint, so llama.cpp, Ollama, vLLM, or a hosted API can be substituted without touching the gate.
+
+\section{Evaluation}
+\paragraph{Data.}
+574 messages from a deployed QQ assistant, labelled by the operator, collected after the judge's training cutoff.
+Positive (should reply) 252, negative 322.
+
+\paragraph{Results.}
+Table~\ref{tab:main} reports accuracy, precision, recall, and F1.
+Rules alone are precise but blind: they recover only half of the positives.
+Delegating ambiguous messages to the judge recovers recall without sacrificing precision; letting rules answer on a name match costs precision, because third-person mentions look like calls.
+
+\begin{table}[t]
+\centering
+\caption{Addressedness decisions on 574 held-out messages. Rules only treat unclear cases as ``no''.}
+\label{tab:main}
+\begin{tabular}{lcccc}
+\toprule
+Strategy & Acc. & Prec. & Rec. & F1\\
+\midrule
+Rules only & 76.8 & 94.1 & 50.4 & 65.6\\
+Judge only & 96.5 & 99.2 & 92.9 & 95.9\\
+Rules (noise skip) + judge & 96.5 & 99.2 & 92.9 & 95.9\\
+Rules (name first) + judge & 95.5 & 96.3 & 93.3 & 94.8\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Classifier baseline and temporal drift.}
+A character n-gram TF-IDF classifier with logistic regression reaches 97.6\% in-distribution.
+Trained on data before 2026-11-07 and tested after, it falls to 87.8\%, close to the majority-class rate of 71.4\% on that split, indicating reliance on surface phrasing rather than context.
+
+\paragraph{Latency.}
+Judge calls over HTTP take 463\,ms at p50, 1.3\,s at p90, and 2.9\,s at p99 on CPU.
+
+\paragraph{Qualitative errors.}
+The judge's two false positives are name-like mentions not directed at the bot; its eighteen false negatives are mostly third-person references and messages accompanying images.
+
+\section{Discussion}
+The results suggest three practical guidelines.
+First, rules are better as a cheap \emph{skip} filter than as a decision maker.
+Second, a small local model is sufficient for the decision; no large model is needed at this stage.
+Third, reported accuracy is sensitive to prompt format: the same model reaches 98.6\% when fed its training template in-process, versus 96.5\% through the service contract, so papers should state which interface was evaluated.
+
+\section{Ethics and Data}
+The public repository contains no chat logs.
+Evaluation data is supplied locally and never uploaded by the code.
+The deployment that produced the evaluation data involved a private group; messages were anonymised before analysis.
+
+\section{Availability}
+Code, tests, and the evaluation harness are available at
+\url{https://github.com/Weijun-Sun08/qq-addressedness-gate} under the MIT license.
+
+\bibliographystyle{plainnat}
+\bibliography{refs}
+
+\end{document}
+

@@ -1,5 +1,6 @@
 ﻿# qq-addressedness-gate
- [![DOI](https://img.shields.io/badge/DOI-pending-lightgrey)](https://github.com/Weijun-Sun08/qq-addressedness-gate)
+
+[![DOI](https://img.shields.io/badge/DOI-pending-lightgrey)](https://github.com/Weijun-Sun08/qq-addressedness-gate)
 
 A small, dependency-free Node.js library that decides **whether a group-chat message is addressed to a bot**, and then hands the message to **any OpenAI-compatible chat model**.
 
@@ -79,6 +80,22 @@ The suite covers text normalization, mention stripping, bot-name matching, noise
 
 This repository is the reusable core extracted from a deployed QQ assistant. The full deployment adds persona, memory, image tagging, and a 30B generator; none of that is needed to study or reuse the addressedness gate.
 
+## Reproducing the reference judge
+
+The judge is a Qwen2.5-7B model adapted with LoRA and exported to OpenVINO INT4. The scripts to merge an adapter, export, and serve it are in `scripts/`; the full recipe (base version, merge, export flags, serving, and what can and cannot be reproduced) is in `docs/reproduce-judge.md`.
+
+```
+python scripts/merge_lora.py --base Qwen/Qwen2.5-7B-Instruct --adapter ./adapter --out ./merged
+bash scripts/export_openvino.sh ./merged ./ov-int4
+python scripts/judge_server.py --model ./ov-int4 --port 11447
+```
+
+`scripts/sample.jsonl` shows the record format; `scripts/sample-500.jsonl` is a 500-row anonymised convenience sample (digits, URLs, e-mails and @-mentions replaced).
+
+## Adapter weights
+
+The reference judge adapter (154 MB, QLoRA on Qwen2.5-7B-Instruct) is distributed separately from this repository; the base model is public. The adapter ships with a `MODEL_CARD.md` describing training, evaluation, and limitations. Use `scripts/merge_lora.py` to attach it to the base, then follow `docs/reproduce-judge.md`.
+
 ## Limitations
 
 - Rules are Chinese-centric (bot names, filler words); the judge carries most of the semantic work.
@@ -88,5 +105,9 @@ This repository is the reusable core extracted from a deployed QQ assistant. The
 ## License
 
 MIT.
+
+
+
+
 
 

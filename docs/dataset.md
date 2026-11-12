@@ -1,4 +1,4 @@
-# Evaluation data
+﻿# Evaluation data
 
 The reproduction script expects JSONL where each line is a chat sample in the format used by the deployed assistant:
 
@@ -25,3 +25,8 @@ It is the training format of the reference judge. Keeping the evaluation in the 
 ## Privacy
 
 The public repository ships no real chat logs. The evaluation file is expected to be supplied by the user; text is processed locally and never uploaded by this code. See `README.md` for the ethical note.
+## Bundled sample
+
+`scripts/sample-500.jsonl` contains 500 anonymised `【接话】` records (200 positive / 300 negative). Digit strings longer than five characters, URLs, e-mail addresses and @-mentions are replaced. Each distinct nickname is mapped to a stable label (用户A, 用户B, ...) so that the who-talks-to-whom structure survives; the same person always gets the same label. Nicknames that appear only inside free prose (not as ``name:`` prefixes or ``说话人：`` values) are not rewritten. It is included so a reader can run the format without access to the private data.
+
+
