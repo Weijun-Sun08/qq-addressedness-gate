@@ -1,4 +1,4 @@
-﻿# qq-addressedness-gate
+# qq-addressedness-gate
 
 [![DOI](https://img.shields.io/badge/DOI-pending-lightgrey)](https://github.com/Weijun-Sun08/qq-addressedness-gate)
 
@@ -51,6 +51,44 @@ const out = await gate.handleMessage({
 ```
 
 Configuration can also be supplied through `config.example.json` (copy to `config.json`).
+
+### Continuation (same person keeps talking)
+
+A group has several conversations at once. When the bot has just answered someone,
+that person's next message is usually the same conversation — not an interruption.
+`src/cont.mjs` tracks this per `(group, user)` pair and annotates the judge request:
+
+```js
+import { createContTracker } from './src/cont.mjs';
+
+const cont = createContTracker({ windowMs: 5 * 60 * 1000, turns: 2 });
+
+// after the bot sends a reply
+cont.noteReply(groupId, userId, { theirs: theirLine, mine: herReply });
+
+// before calling the judge
+const req = cont.request(groupId, userId, { who, text, ctx });
+// req.cont === true → the judge sees 【续话标记】是 plus "he said / she replied"
+const answer = await judge(req);
+if (answer === '否') cont.consume(groupId, userId); // two negatives close the window
+```
+
+Run `node scripts/demo-cont.mjs` to print the request bodies for three cases
+(same person continues, someone else interrupts, window already closed).
+Full details: [`docs/continuation.md`](docs/continuation.md).
+
+### Custom persona names
+
+The reference judge was trained on one set of names, so other deployments must map
+their own names consistently — both in the prompt (`names` field) and in the
+context labels for the bot's own lines. `scripts/check_name_mapping.py` compares
+three variants (no rename / prompt only / prompt + context labels) against a
+running judge:
+
+```
+python scripts/check_name_mapping.py --url http://127.0.0.1:11447 \
+    --old 女仆酱 --new 小碧 --alias 碧酱
+```
 
 ## Judge contract
 

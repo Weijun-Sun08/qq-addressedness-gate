@@ -21,28 +21,40 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 import openvino_genai as ovg
 
-SYS = (
-    "你是 QQ 群聊助手，替女仆酱判断一句话的听话人是不是她。\n"
-    "【接话】看上下文和这句话，判断这句话的听话人是不是女仆酱：是 / 否。\n"
-    "  必须先看上文最后几句是谁在跟谁说话，再判断这句的「你」指向谁。\n"
-    "  判是：直接叫她名字/小蓝、@她、向她提问、命令她、求助她、夸她、接她话往下说。\n"
-    "  同一人续话：说话人就是你刚回复过的那个人、而且他在接着刚才的话题往下说 → 判是。\n"
-    "  判否：主人在跟别人讨论她或安排她、群友之间聊天接梗、第三人称说她、\n"
-    "        别的机器人在说话、自言自语、纯语气词、转述别处的话。\n"
-    "  拿不准时判否。\n"
-    "只输出规定的内容，不要解释。"
-)
+import os
+
+# 名字可配置：别人部署时换成自己的叫法（2026-11-14）
+BOT_NAMES = [n.strip() for n in os.environ.get('QQ_BOT_NAMES', '女仆酱,小蓝').split(',') if n.strip()] or ['女仆酱']
+
+
+def make_sys(names):
+    primary = names[0]
+    aliases = '、'.join(names)
+    return (
+        f"你是 QQ 群聊助手，替{primary}判断一句话的听话人是不是她。\n"
+        f"【接话】看上下文和这句话，判断这句话的听话人是不是{primary}：是 / 否。\n"
+        "  必须先看上文最后几句是谁在跟谁说话，再判断这句的「你」指向谁。\n"
+        f"  判是：直接叫她名字/{aliases}、@她、向她提问、命令她、求助她、夸她、接她话往下说。\n"
+        "  同一人续话：说话人就是你刚回复过的那个人、而且他在接着刚才的话题往下说 → 判是。\n"
+        "  判否：主人在跟别人讨论她或安排她、群友之间聊天接梗、第三人称说她、\n"
+        "        别的机器人在说话、自言自语、纯语气词、转述别处的话。\n"
+        "  拿不准时判否。\n"
+        "只输出「是」或「否」。"
+    )
+
+
+SYS = make_sys(BOT_NAMES)
 
 LOCK = threading.Lock()
 PIPE = None
 
 
-def build_prompt(who, ctx, text, cont=False):
+def build_prompt(who, ctx, text, cont=False, names=None):
     c = "\n".join(ctx or []) or "（无）"
     mark = "是" if cont else "否"
     user = f"【接话】\n【续话标记】{mark}\n上下文：\n{c}\n说话人：{who}\n这句话：{text}\n判断："
     extra = (
-        "\n【续话】说话人刚和女仆酱聊过、上一条就是女仆酱回的，这条是接着说的，应当判是。"
+        f"\n【续话】说话人刚和{(names or BOT_NAMES)[0]}聊过、上一条就是{(names or BOT_NAMES)[0]}回的，这条是接着说的，应当判是。"
         if cont
         else ""
     )

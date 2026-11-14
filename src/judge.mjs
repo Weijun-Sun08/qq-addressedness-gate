@@ -1,11 +1,14 @@
 // 判官：把一个 HTTP 判定服务包成可替换的接口。
-// 约定：POST {baseUrl}/judge  {who, text, ctx[]}  → {answer: "是"|"否"}
+// 约定：POST {baseUrl}/judge  {who, text, ctx[], names?}  → {answer: "是"|"否"}
+// names 可选：把这个人设自己的叫法传给判官，别人部署时不用改提示词
 // 这样本地 7B（OpenVINO/llama.cpp）或云端都能接，只要实现这个契约。
 const DEFAULTS = {
   baseUrl: 'http://127.0.0.1:11447',
   timeoutMs: 5000,
   // 判官不可用时：保守选择不接，避免乱插嘴
   onError: 'skip',
+  // 判官接受的人设名字，例如 ['小碧','碧酱']
+  names: null,
 };
 
 export function createJudge(config = {}) {
@@ -18,7 +21,13 @@ export function createJudge(config = {}) {
       const res = await fetch(`${cfg.baseUrl.replace(/\/$/, '')}/judge`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ who, text, ctx }),
+        body: JSON.stringify({
+          who,
+          text,
+          ctx,
+          // 名字随请求一起传，判官就不用写死某个人设（2026-11-14）
+          ...(cfg.names ? { names: cfg.names } : {}),
+        }),
         signal: ctrl.signal,
       });
       if (!res.ok) throw new Error(`judge http ${res.status}`);
