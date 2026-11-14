@@ -6,7 +6,7 @@
 
 ```
 适配器（145MB）
-  GitHub Release：https://github.com/Weijun-Sun08/qq-addressedness-gate/releases/tag/v0.1.2
+  GitHub Release：https://github.com/Weijun-Sun08/qq-addressedness-gate/releases/latest
   夸克网盘：https://pan.quark.cn/s/0191d4299cfd  提取码 RdLM
 
 导出好的 OpenVINO INT4 模型（3.8GB，解压即用）

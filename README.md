@@ -140,7 +140,7 @@ Two packages are distributed outside the repository:
 
 | Package | Size | Where |
 |---|---|---|
-| LoRA adapter (`qq-judge-lora-v1.2.zip`) | 145 MB | [GitHub Releases](https://github.com/Weijun-Sun08/qq-addressedness-gate/releases/tag/v0.1.2) / [Quark drive](https://pan.quark.cn/s/0191d4299cfd) (code `RdLM`) / [OneDrive](https://1drv.ms/f/c/79b25f680ce98041/IgB26zQ7KBO7R4d8LCxYtIqKARAkxiqC_DgEyeNhkuTMAow?e=y2y2Tb) |
+| LoRA adapter (`qq-judge-lora-v1.2.zip`) | 145 MB | [GitHub Releases](https://github.com/Weijun-Sun08/qq-addressedness-gate/releases/latest) / [Quark drive](https://pan.quark.cn/s/0191d4299cfd) (code `RdLM`) / [OneDrive](https://1drv.ms/f/c/79b25f680ce98041/IgB26zQ7KBO7R4d8LCxYtIqKARAkxiqC_DgEyeNhkuTMAow?e=y2y2Tb) |
 | OpenVINO INT4 model (`qq-judge-ov-int4-v1.2b.7z`) | 3.8 GB | [Quark drive](https://pan.quark.cn/s/0191d4299cfd) (code `RdLM`, China) / [OneDrive](https://1drv.ms/f/c/79b25f680ce98041/IgB26zQ7KBO7R4d8LCxYtIqKARAkxiqC_DgEyeNhkuTMAow?e=y2y2Tb) |
 
 Checksums (SHA256):
