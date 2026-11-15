@@ -7,7 +7,7 @@ test('normalizeText 去零宽字符并压缩空白', () => {
 });
 
 test('stripMentions 去掉 @ 与 CQ 码', () => {
-  assert.equal(stripMentions('[CQ:at,qq=123] @小蓝 你好'), '你好');
+  assert.equal(stripMentions('[CQ:at,qq=123] @小蓝 你好', ['小蓝']), '你好');
 });
 
 test('callsBotName 支持别名', () => {
