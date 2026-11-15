@@ -185,11 +185,22 @@ llama-server -m qq-judge-v2.0-Q4_K_M.gguf --port 11448 --jinja -c 4096 -np 1
 python scripts/judge_server_gguf.py --port 11447 --backend http://127.0.0.1:11448
 ```
 
+Windows note: in PowerShell, `curl -d "{...}"` loses the quotes and Windows editors may add a
+UTF-8 BOM. Write the JSON to a file first and use `curl --data-binary @body.json`; the server
+already accepts BOM (decoded as `utf-8-sig`). The first request after start can take 6-8 s while
+the model warms up — set the client timeout to at least 15 s.
+
 Q4_K_M occupies about 4.4 GB of VRAM and answers a judgement in 50-100 ms on a laptop GPU.
 If the main chat model already fills the GPU, use the OpenVINO build instead — it runs on
 CPU at roughly 0.4-0.5 s per judgement and leaves VRAM untouched.
 
-**OpenVINO INT4 (CPU).** Unpack, then run `scripts/judge_server.py --model <dir>`.
+**OpenVINO INT4 (CPU).** Unpack; the archive already contains `judge_server.py`:
+
+```
+python judge_server.py --model . --port 11447
+```
+
+Add `--host 0.0.0.0` if the bot runs in another container or machine.
 
 **Adapter.** Merge into Qwen2.5-7B-Instruct (or a v1.x merged base) with
 `scripts/merge_lora.py`, then export and serve as above.

@@ -65,8 +65,8 @@ def build_prompt(who, ctx, text, cont=False, names=None):
     )
 
 
-def infer(who, ctx, text, cont):
-    prompt = build_prompt(who, ctx, text, cont)
+def infer(who, ctx, text, cont, names=None):
+    prompt = build_prompt(who, ctx, text, cont, names)
     cfg = ovg.GenerationConfig()
     # 只生成 1 个 token：多生成会出现「否否否否」，也更慢
     cfg.max_new_tokens = 1
@@ -100,7 +100,7 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         try:
             n = int(self.headers.get("Content-Length") or 0)
-            payload = json.loads(self.rfile.read(n).decode("utf-8") or "{}")
+            payload = json.loads(self.rfile.read(n).decode("utf-8-sig") or "{}")   # 容忍 Windows 的 BOM
             if not self.path.startswith("/judge"):
                 self._send({"error": "not found"}, 404)
                 return
@@ -109,6 +109,7 @@ class Handler(BaseHTTPRequestHandler):
                 payload.get("ctx") or [],
                 payload.get("text") or "",
                 bool(payload.get("cont")),
+                payload.get("names") or None,
             )
             self._send({"answer": answer})
         except Exception as e:  # noqa: BLE001
