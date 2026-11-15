@@ -7,11 +7,11 @@
 ```
 适配器（145MB）
   GitHub Release：https://github.com/Weijun-Sun08/qq-addressedness-gate/releases/latest
-  夸克网盘：https://pan.quark.cn/s/0191d4299cfd  提取码 RdLM
+  夸克网盘：https://pan.quark.cn/s/3c3e6b41fff0  提取码 uQDk
 
 导出好的 OpenVINO INT4 模型（3.8GB，解压即用）
-  夸克网盘：https://pan.quark.cn/s/0191d4299cfd  提取码 RdLM
-  OneDrive：https://1drv.ms/f/c/79b25f680ce98041/IgB26zQ7KBO7R4d8LCxYtIqKARAkxiqC_DgEyeNhkuTMAow?e=y2y2Tb
+  夸克网盘：https://pan.quark.cn/s/3c3e6b41fff0  提取码 uQDk
+  OneDrive：https://1drv.ms/f/c/79b25f680ce98041/IgBE6ppVsc6-QoqY9anjjxVGAT4SAhdMUjmEc50HkGBKOG8?e=HUsYKS
 
 校验值见各包的 README，或 README.md 里的 SHA256。
 ```

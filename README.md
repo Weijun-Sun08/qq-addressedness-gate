@@ -136,21 +136,63 @@ python scripts/judge_server.py --model ./ov-int4 --port 11447
 
 ## Model weights
 
-Two packages are distributed outside the repository:
+Three packages are distributed outside the repository. They differ only in packaging and
+quantisation — the judge behaviour is the same model.
 
-| Package | Size | Where |
+| Package | Size | Best for | Where |
+|---|---|---|---|
+| LoRA adapter `qq-judge-lora-v2.0.zip` | 145 MB | merging into your own base, fine-tuning | [GitHub Releases](https://github.com/Weijun-Sun08/qq-addressedness-gate/releases/latest) / [Quark drive](https://pan.quark.cn/s/3c3e6b41fff0) (code `uQDk`) |
+| GGUF Q4_K_M `qq-judge-gguf-v2.0.7z` | 4.3 GB | GPU or CPU via llama.cpp / Ollama | [Quark drive](https://pan.quark.cn/s/3c3e6b41fff0) (code `uQDk`) / [OneDrive](https://1drv.ms/f/c/79b25f680ce98041/IgBE6ppVsc6-QoqY9anjjxVGAT4SAhdMUjmEc50HkGBKOG8?e=HUsYKS) |
+| OpenVINO INT4 `qq-judge-ov-int4-v1.2b.7z` | 3.8 GB | CPU-only, spare VRAM for the main model | [Quark drive](https://pan.quark.cn/s/3c3e6b41fff0) (code `uQDk`) |
+
+Want a step-by-step "download → run → call it from your bot" walkthrough? See
+[`docs/judge-quickstart.md`](docs/judge-quickstart.md).
+
+### v2.0 numbers
+
+The v2.0 adapter was trained on 8,000 addressedness samples only, with two changes over v1.x:
+
+- context raised from 1 message to up to 15 messages per judgement;
+- half of the training rows had the bot's persona name replaced (`女仆酱`/`小蓝` → other names),
+  so the judge does not depend on one specific name.
+
+Held-out 942-message set (never seen in training):
+
+| Model | Original names | Renamed persona |
 |---|---|---|
-| LoRA adapter (`qq-judge-lora-v1.2.zip`) | 145 MB | [GitHub Releases](https://github.com/Weijun-Sun08/qq-addressedness-gate/releases/latest) / [Quark drive](https://pan.quark.cn/s/0191d4299cfd) (code `RdLM`) / [OneDrive](https://1drv.ms/f/c/79b25f680ce98041/IgB26zQ7KBO7R4d8LCxYtIqKARAkxiqC_DgEyeNhkuTMAow?e=y2y2Tb) |
-| OpenVINO INT4 model (`qq-judge-ov-int4-v1.2b.7z`) | 3.8 GB | [Quark drive](https://pan.quark.cn/s/0191d4299cfd) (code `RdLM`, China) / [OneDrive](https://1drv.ms/f/c/79b25f680ce98041/IgB26zQ7KBO7R4d8LCxYtIqKARAkxiqC_DgEyeNhkuTMAow?e=y2y2Tb) |
+| v1.4 (previous) | 96.39% | 96.28% |
+| v2.0 | **97.35%** | **97.56%** |
+
+Per-slice accuracy for v2.0: context ≥ 4 messages 96.94%, no context 97.66%, continuation
+(same person keeps talking) 95.21%. The gain is concentrated in continuation cases
+(91.0% → 95.2%), which is the failure mode the extra context was meant to fix.
 
 Checksums (SHA256):
 
 ```
-adapter  24653DC48E2A21286A0DBE368A5A85B705BE247CAFBA97F11BB791E1A6F84DAF
-model    FD4C9E82ED2D42C2F175960AA17A007F752EF0C0B66471FB85CB74ADD8D21B24
+adapter (v2.0)  2DF6A589013D97855529FCEBC5620078D231C311F12013DDCBF72F9342D2E408
+GGUF (v2.0)     CA48E6FE08ABDE7BB35678BD9328889FFAA22B708F3DA9AD3224B329F26DF72E
+adapter (v1.2)  24653DC48E2A21286A0DBE368A5A85B705BE247CAFBA97F11BB791E1A6F84DAF
+OV INT4 (v1.2b) FD4C9E82ED2D42C2F175960AA17A007F752EF0C0B66471FB85CB74ADD8D21B24
 ```
 
-Both ship with `MODEL_CARD.md` (training, evaluation, limitations). To use the adapter, run `scripts/merge_lora.py` then follow `docs/reproduce-judge.md`; to use the exported model, unpack it and run `scripts/judge_server.py --model <dir>`.
+Both model packages ship with `MODEL_CARD.md` (training recipe, evaluation, limitations).
+
+**GGUF (GPU or CPU).** Unpack, then:
+
+```
+llama-server -m qq-judge-v2.0-Q4_K_M.gguf --port 11448 --jinja -c 4096 -np 1
+python scripts/judge_server_gguf.py --port 11447 --backend http://127.0.0.1:11448
+```
+
+Q4_K_M occupies about 4.4 GB of VRAM and answers a judgement in 50-100 ms on a laptop GPU.
+If the main chat model already fills the GPU, use the OpenVINO build instead — it runs on
+CPU at roughly 0.4-0.5 s per judgement and leaves VRAM untouched.
+
+**OpenVINO INT4 (CPU).** Unpack, then run `scripts/judge_server.py --model <dir>`.
+
+**Adapter.** Merge into Qwen2.5-7B-Instruct (or a v1.x merged base) with
+`scripts/merge_lora.py`, then export and serve as above.
 
 ## Limitations
 
