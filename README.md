@@ -142,7 +142,7 @@ quantisation — the judge behaviour is the same model.
 | Package | Size | Best for | Where |
 |---|---|---|---|
 | LoRA adapter `qq-judge-lora-v2.1.zip` | 145 MB | merging into your own base, fine-tuning | [GitHub Releases](https://github.com/Weijun-Sun08/qq-addressedness-gate/releases/latest) / [Quark drive](https://pan.quark.cn/s/9877b2ac28f2) (code `L1uB`) |
-| GGUF Q4_K_M `qq-judge-gguf-v2.1.7z` | 4.3 GB | GPU or CPU via llama.cpp / Ollama | [Quark drive](https://pan.quark.cn/s/9877b2ac28f2) (code `L1uB`) / [OneDrive](https://1drv.ms/f/c/79b25f680ce98041/IgBE6ppVsc6-QoqY9anjjxVGAT4SAhdMUjmEc50HkGBKOG8?e=HUsYKS) |
+| GGUF Q4_K_M `qq-judge-gguf-v2.1.7z` | 4.3 GB | GPU or CPU via llama.cpp / Ollama | [Quark drive](https://pan.quark.cn/s/9877b2ac28f2) (code `L1uB`) / [OneDrive](https://1drv.ms/f/c/79b25f680ce98041/IgBE6ppVsc6-QoqY9anjjxVGAT4SAhdMUjmEc50HkGBKOG8?e=xBd5HV) |
 | OpenVINO INT4 `qq-judge-ov-int4-v2.1.7z` | 3.7 GB | CPU-only, spare VRAM for the main model | [Quark drive](https://pan.quark.cn/s/9877b2ac28f2) (code `L1uB`) |
 
 Want a step-by-step "download → run → call it from your bot" walkthrough? See
