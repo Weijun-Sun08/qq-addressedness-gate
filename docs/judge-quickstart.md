@@ -7,19 +7,19 @@
 
 | 你的情况 | 用哪个 |
 |---|---|
-| 有独立显卡，或不跑别的模型 | `qq-judge-gguf-v2.0.7z`（4.3 GB） |
-| 同时跑 30B 之类的大模型，显存紧 | `qq-judge-ov-int4-v2.0.7z`（3.7 GB，CPU） |
-| 想自己合并、继续微调 | `qq-judge-lora-v2.0.zip`（145 MB） |
+| 有独立显卡，或不跑别的模型 | `qq-judge-gguf-v2.1.7z`（4.3 GB） |
+| 同时跑 30B 之类的大模型，显存紧 | `qq-judge-ov-int4-v2.1.7z`（3.7 GB，CPU） |
+| 想自己合并、继续微调 | `qq-judge-lora-v2.1.zip`（145 MB） |
 
 下面以 GGUF 版为例。
 
 ## 2. 起服务
 
-解压后目录里应该有 `qq-judge-v2.0-Q4_K_M.gguf`、`judge_server_gguf.py`、`README.md`。
+解压后目录里应该有 `qq-judge-v2.1-Q4_K_M.gguf`、`judge_server_gguf.py`、`README.md`。
 
 ```bash
 # 后端：llama.cpp（没有的话去 llama.cpp 的 releases 下个预编译包）
-llama-server -m qq-judge-v2.0-Q4_K_M.gguf --port 11448 --jinja -c 4096 -np 1
+llama-server -m qq-judge-v2.1-Q4_K_M.gguf --port 11448 --jinja -c 4096 -np 1
 
 # 前端：把 OpenAI 接口包装成 /judge
 python judge_server_gguf.py --port 11447 --backend http://127.0.0.1:11448
@@ -28,7 +28,7 @@ python judge_server_gguf.py --port 11447 --backend http://127.0.0.1:11448
 CPU 版（OpenVINO）只需要一条：
 
 ```bash
-python scripts/judge_server.py --model ./ov-int4-v2.0 --port 11447
+python scripts/judge_server.py --model ./ov-int4-v2.1 --port 11447
 ```
 
 ## 3. 确认能判断
