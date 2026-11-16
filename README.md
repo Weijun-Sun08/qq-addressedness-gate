@@ -141,39 +141,49 @@ quantisation — the judge behaviour is the same model.
 
 | Package | Size | Best for | Where |
 |---|---|---|---|
-| LoRA adapter `qq-judge-lora-v2.0.zip` | 145 MB | merging into your own base, fine-tuning | [GitHub Releases](https://github.com/Weijun-Sun08/qq-addressedness-gate/releases/latest) / [Quark drive](https://pan.quark.cn/s/3c3e6b41fff0) (code `uQDk`) |
-| GGUF Q4_K_M `qq-judge-gguf-v2.0.7z` | 4.3 GB | GPU or CPU via llama.cpp / Ollama | [Quark drive](https://pan.quark.cn/s/3c3e6b41fff0) (code `uQDk`) / [OneDrive](https://1drv.ms/f/c/79b25f680ce98041/IgBE6ppVsc6-QoqY9anjjxVGAT4SAhdMUjmEc50HkGBKOG8?e=HUsYKS) |
-| OpenVINO INT4 `qq-judge-ov-int4-v1.2b.7z` | 3.8 GB | CPU-only, spare VRAM for the main model | [Quark drive](https://pan.quark.cn/s/3c3e6b41fff0) (code `uQDk`) |
+| LoRA adapter `qq-judge-lora-v2.1.zip` | 145 MB | merging into your own base, fine-tuning | [GitHub Releases](https://github.com/Weijun-Sun08/qq-addressedness-gate/releases/latest) / [Quark drive](https://pan.quark.cn/s/3c3e6b41fff0) (code `uQDk`) |
+| GGUF Q4_K_M `qq-judge-gguf-v2.1.7z` | 4.3 GB | GPU or CPU via llama.cpp / Ollama | [Quark drive](https://pan.quark.cn/s/3c3e6b41fff0) (code `uQDk`) / [OneDrive](https://1drv.ms/f/c/79b25f680ce98041/IgBE6ppVsc6-QoqY9anjjxVGAT4SAhdMUjmEc50HkGBKOG8?e=HUsYKS) |
+| OpenVINO INT4 `qq-judge-ov-int4-v2.1.7z` | 3.7 GB | CPU-only, spare VRAM for the main model | [Quark drive](https://pan.quark.cn/s/3c3e6b41fff0) (code `uQDk`) |
 
 Want a step-by-step "download → run → call it from your bot" walkthrough? See
 [`docs/judge-quickstart.md`](docs/judge-quickstart.md).
 
-### v2.0 numbers
+### v2.1 numbers
 
-The v2.0 adapter was trained on 8,000 addressedness samples only, with two changes over v1.x:
+v2.1 continues from the v2.0 merged model and adds 1,513 real "the bot just spoke, here is the
+next thing someone said" turns, plus name-replacement augmentation on 53% of rows.
+9,500 samples, one epoch.
 
-- context raised from 1 message to up to 15 messages per judgement;
-- half of the training rows had the bot's persona name replaced (`女仆酱`/`小蓝` → other names),
-  so the judge does not depend on one specific name.
+Clean held-out set (660 turns whose sentences never appear in training; 60 should-reply,
+600 should-not):
 
-Held-out 942-message set (never seen in training):
+| Model | Accuracy | Wrong replies | Missed replies | Correct skips |
+|---|---|---|---|---|
+| v2.0 | 97.27% | 14 | 4 | 97.67% |
+| **v2.1** | **98.48%** | **4** | 6 | **99.33%** |
 
-| Model | Original names | Renamed persona |
-|---|---|---|
-| v1.4 (previous) | 96.39% | 96.28% |
-| v2.0 | **97.35%** | **97.56%** |
+The bigger 942-message set overlaps the training data at the sentence level (163 of its 167
+continuation rows reuse sentences seen in training), so treat those numbers as a relative
+baseline only:
 
-Per-slice accuracy for v2.0: context ≥ 4 messages 96.94%, no context 97.66%, continuation
-(same person keeps talking) 95.21%. The gain is concentrated in continuation cases
-(91.0% → 95.2%), which is the failure mode the extra context was meant to fix.
+| Model | Original names | Renamed persona | Continuation |
+|---|---|---|---|
+| v2.0 | 97.35% | 97.56% | 95.21% |
+| v2.1 | 97.98% | 98.00% | 97.60% |
+
+```
+v2.1 per-slice (contaminated 942 set): context >= 4  98.12%, no context 97.85%
+false replies on unrelated group chatter: v2.0 13/742, v2.1 11/742
+```
 
 Checksums (SHA256):
 
 ```
+adapter (v2.1)  DD4D90891421C0569DFA5F3A4DA6F80A479B48DFEAA34F1376BF8FDE701887EF
+GGUF (v2.1)     57BFF48E47E09D7F5D24EAE08E209620FE91526B74DF0D2B23345C883404EA74
+OV INT4 (v2.1)  6AD54A7C5344BCA9C21B39129FB9CBAB50580C3AB1C784FBFF58ED773036D492
 adapter (v2.0)  2DF6A589013D97855529FCEBC5620078D231C311F12013DDCBF72F9342D2E408
 GGUF (v2.0)     CA48E6FE08ABDE7BB35678BD9328889FFAA22B708F3DA9AD3224B329F26DF72E
-adapter (v1.2)  24653DC48E2A21286A0DBE368A5A85B705BE247CAFBA97F11BB791E1A6F84DAF
-OV INT4 (v1.2b) FD4C9E82ED2D42C2F175960AA17A007F752EF0C0B66471FB85CB74ADD8D21B24
 ```
 
 Both model packages ship with `MODEL_CARD.md` (training recipe, evaluation, limitations).
@@ -181,7 +191,7 @@ Both model packages ship with `MODEL_CARD.md` (training recipe, evaluation, limi
 **GGUF (GPU or CPU).** Unpack, then:
 
 ```
-llama-server -m qq-judge-v2.0-Q4_K_M.gguf --port 11448 --jinja -c 4096 -np 1
+llama-server -m qq-judge-v2.1-Q4_K_M.gguf --port 11448 --jinja -c 4096 -np 1
 python scripts/judge_server_gguf.py --port 11447 --backend http://127.0.0.1:11448
 ```
 
