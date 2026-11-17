@@ -141,49 +141,63 @@ quantisation — the judge behaviour is the same model.
 
 | Package | Size | Best for | Where |
 |---|---|---|---|
-| LoRA adapter `qq-judge-lora-v2.1.zip` | 145 MB | merging into your own base, fine-tuning | [GitHub Releases](https://github.com/Weijun-Sun08/qq-addressedness-gate/releases/latest) / [Quark drive](https://pan.quark.cn/s/9877b2ac28f2) (code `L1uB`) |
-| GGUF Q4_K_M `qq-judge-gguf-v2.1.7z` | 4.3 GB | GPU or CPU via llama.cpp / Ollama | [Quark drive](https://pan.quark.cn/s/9877b2ac28f2) (code `L1uB`) / [OneDrive](https://1drv.ms/f/c/79b25f680ce98041/IgBE6ppVsc6-QoqY9anjjxVGAT4SAhdMUjmEc50HkGBKOG8?e=xBd5HV) |
-| OpenVINO INT4 `qq-judge-ov-int4-v2.1.7z` | 3.7 GB | CPU-only, spare VRAM for the main model | [Quark drive](https://pan.quark.cn/s/9877b2ac28f2) (code `L1uB`) |
+| LoRA adapter `qq-judge-lora-v2.2.zip` | 145 MB | merging into your own base, fine-tuning | [GitHub Releases](https://github.com/Weijun-Sun08/qq-addressedness-gate/releases/latest) / [Quark drive](https://pan.quark.cn/s/9c88926cc87a) (code `sJMi`) |
+| GGUF Q4_K_M `qq-judge-gguf-v2.2.7z` | 4.3 GB | GPU or CPU via llama.cpp / Ollama | [Quark drive](https://pan.quark.cn/s/9c88926cc87a) (code `sJMi`) |
+| GGUF Q8_0 `qq-judge-gguf-v2.2-Q8.7z` | 7.3 GB | GPU with ~8 GB VRAM, slightly better than Q4 | [Quark drive](https://pan.quark.cn/s/9c88926cc87a) (code `sJMi`) |
+| OpenVINO INT4 `qq-judge-ov-int4-v2.2.7z` | 3.7 GB | CPU-only, spare VRAM for the main model | [Quark drive](https://pan.quark.cn/s/9c88926cc87a) (code `sJMi`) / [OneDrive](https://1drv.ms/f/c/79b25f680ce98041/IgBE6ppVsc6-QoqY9anjjxVGAT4SAhdMUjmEc50HkGBKOG8?e=nMQh9N) |
 
 Want a step-by-step "download → run → call it from your bot" walkthrough? See
 [`docs/judge-quickstart.md`](docs/judge-quickstart.md).
 
-### v2.1 numbers
+### v2.2 numbers
 
-v2.1 continues from the v2.0 merged model and adds 1,513 real "the bot just spoke, here is the
-next thing someone said" turns, plus name-replacement augmentation on 53% of rows.
-9,500 samples, one epoch.
+v2.2 is a targeted fix for two failure modes of v2.1:
 
-Clean held-out set (660 turns whose sentences never appear in training; 60 should-reply,
-600 should-not):
+- **short follow-ups** — the bot says something, the person replies "好" / "行吧" / "随你";
+  v2.1 judged almost all of these as "not addressed";
+- **multi-party scenes** — three or four people talking, the judge kept replying when two
+  others were chatting with each other.
 
-| Model | Accuracy | Wrong replies | Missed replies | Correct skips |
-|---|---|---|---|---|
-| v2.0 | 97.27% | 14 | 4 | 97.67% |
-| **v2.1** | **98.48%** | **4** | 6 | **99.33%** |
+Training data: 4,845 rows (1,500 short-follow positives, 300 short-follow negatives,
+1,200 multi-party positives, 600 multi-party negatives, 1,500 replay), 1 epoch, lr 5e-5.
 
-The bigger 942-message set overlaps the training data at the sentence level (163 of its 167
-continuation rows reuse sentences seen in training), so treat those numbers as a relative
-baseline only:
+| Slice | v2.1 | v2.2 |
+|---|---|---|
+| Short follow-up (120) | 38.3% | **94.2%** |
+| Multi-party (200) | 84.0% | **100%** |
+| Should reply (200) | 96.0% | 97.5% |
+| Renamed persona (200) | 96.5% | 97.0% |
+| Others chatting (200) | 98.0% | 98.5% |
+| Clean holdout (200) | 99.5% | 98.5% |
 
-| Model | Original names | Renamed persona | Continuation |
-|---|---|---|---|
-| v2.0 | 97.35% | 97.56% | 95.21% |
-| v2.1 | 97.98% | 98.00% | 97.60% |
+Hard slices (400 each, deliberately ambiguous, generated separately):
+short follow-up 83.8% (recall 74%, precision 100%), multi-party 93.5% (recall 87%,
+precision 100%).
 
-```
-v2.1 per-slice (contaminated 942 set): context >= 4  98.12%, no context 97.85%
-false replies on unrelated group chatter: v2.0 13/742, v2.1 11/742
-```
+### CPU build is the reference — prefer it
+
+The three packages are the same weights, but **the OpenVINO CPU build scores higher than the
+GGUF builds**, measured on the same test sets with the same prompt:
+
+| Build | Short follow-up | Multi-party |
+|---|---|---|
+| OpenVINO INT4 (CPU) | **94.2%** | **100%** / [OneDrive](https://1drv.ms/f/c/79b25f680ce98041/IgBE6ppVsc6-QoqY9anjjxVGAT4SAhdMUjmEc50HkGBKOG8?e=nMQh9N) |
+| GGUF Q8_0 (GPU) | 85.8% | 99.5% |
+| GGUF Q4_K_M (GPU) | 83.3% | 99.0% |
+
+The gap comes from the runtime, not the weights: the CPU build feeds the raw chat template and
+samples a single token, while the GGUF path goes through `llama-server`'s chat API. **If you have enough RAM (about 8 GB for the model) and a CPU fast enough to judge in roughly
+0.6-0.8 s, use the CPU build.** Use GGUF only when CPU time is scarce (weak CPU, or many concurrent bots) and you can accept
+~10 points less on short follow-ups; Q8_0 is measurably better than Q4_K_M (+2.5 points)
+and needs roughly 8 GB of VRAM.
 
 Checksums (SHA256):
 
 ```
-adapter (v2.1)  DD4D90891421C0569DFA5F3A4DA6F80A479B48DFEAA34F1376BF8FDE701887EF
-GGUF (v2.1)     57BFF48E47E09D7F5D24EAE08E209620FE91526B74DF0D2B23345C883404EA74
-OV INT4 (v2.1)  6AD54A7C5344BCA9C21B39129FB9CBAB50580C3AB1C784FBFF58ED773036D492
-adapter (v2.0)  2DF6A589013D97855529FCEBC5620078D231C311F12013DDCBF72F9342D2E408
-GGUF (v2.0)     CA48E6FE08ABDE7BB35678BD9328889FFAA22B708F3DA9AD3224B329F26DF72E
+adapter (v2.2)   4CC6ADA0959AF4719A3B2406430BF6C41F4680DFF8291BA357085D6F543064E8
+OV INT4 (v2.2)   D740C6F500A45A059EE214DC075F5E897056BEE014F5E641DE29145B1046C4B4
+GGUF Q4 (v2.2)   0057D0F97D34E000E15AEE6FE6E2B0CD847B31A9CA77214B9D4DB69EF7548B92
+GGUF Q8 (v2.2)   3CE71A8603E83444BC9BF86CC6C0EE1F81AD0E41CF69A7ED1BC7F8AD1CB1B4D0
 ```
 
 Both model packages ship with `MODEL_CARD.md` (training recipe, evaluation, limitations).
@@ -191,7 +205,7 @@ Both model packages ship with `MODEL_CARD.md` (training recipe, evaluation, limi
 **GGUF (GPU or CPU).** Unpack, then:
 
 ```
-llama-server -m qq-judge-v2.1-Q4_K_M.gguf --port 11448 --jinja -c 4096 -np 1
+llama-server -m qq-judge-v2.2-Q4_K_M.gguf --port 11448 --jinja -c 4096 -np 1
 python scripts/judge_server_gguf.py --port 11447 --backend http://127.0.0.1:11448
 ```
 
