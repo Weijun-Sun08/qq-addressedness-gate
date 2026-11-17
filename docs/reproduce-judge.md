@@ -9,12 +9,12 @@
   GitHub Release：https://github.com/Weijun-Sun08/qq-addressedness-gate/releases/latest
   夸克网盘：https://pan.quark.cn/s/9c88926cc87a  提取码 sJMi
 
-导出好的 OpenVINO INT4 模型（3.7GB，解压即用）
-  夸克网盘：https://pan.quark.cn/s/9c88926cc87a  提取码 sJMi
-
-GGUF Q4 模型（4.3GB，llama.cpp 用）
+导出好的 OpenVINO INT4 模型（3.7GB，解压即用，推荐）
   夸克网盘：https://pan.quark.cn/s/9c88926cc87a  提取码 sJMi
   OneDrive：https://1drv.ms/f/c/79b25f680ce98041/IgBE6ppVsc6-QoqY9anjjxVGAT4SAhdMUjmEc50HkGBKOG8?e=nMQh9N
+
+GGUF Q4 / Q8 模型（4.3GB / 7.3GB，llama.cpp 用，精度略低于 CPU 版）
+  夸克网盘：https://pan.quark.cn/s/9c88926cc87a  提取码 sJMi
 
 校验值见各包的 README，或 README.md 里的 SHA256。
 ```
