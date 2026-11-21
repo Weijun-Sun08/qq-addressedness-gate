@@ -141,46 +141,43 @@ quantisation — the judge behaviour is the same model.
 
 | Package | Size | Best for | Where |
 |---|---|---|---|
-| LoRA adapter `qq-judge-lora-v2.3.zip` | 145 MB | merging into your own base, fine-tuning | [GitHub Releases](https://github.com/Weijun-Sun08/qq-addressedness-gate/releases/latest) / [Quark drive](https://pan.quark.cn/s/44ead65a8c26) (code `RpVe`) |
-| GGUF Q4_K_M `qq-judge-gguf-v2.3.7z` | 4.3 GB | GPU or CPU via llama.cpp / Ollama | [Quark drive](https://pan.quark.cn/s/44ead65a8c26) (code `RpVe`) |
-| GGUF Q8_0 `qq-judge-gguf-v2.3-Q8.7z` | 7.3 GB | GPU with ~8 GB VRAM, slightly better than Q4 | [Quark drive](https://pan.quark.cn/s/44ead65a8c26) (code `RpVe`) |
-| OpenVINO INT4 `qq-judge-ov-int4-v2.3.7z` | 3.7 GB | CPU-only, spare VRAM for the main model | [Quark drive](https://pan.quark.cn/s/44ead65a8c26) (code `RpVe`) / [OneDrive](https://1drv.ms/f/c/79b25f680ce98041/IgBE6ppVsc6-QoqY9anjjxVGAT4SAhdMUjmEc50HkGBKOG8?e=E4lpUc) |
+| LoRA adapter `qq-judge-lora-v2.6.zip` | 145 MB | merging into your own base, fine-tuning | [GitHub Releases](https://github.com/Weijun-Sun08/qq-addressedness-gate/releases/latest) / [Quark drive](https://pan.quark.cn/s/78f66a0809b3) (code `rAfd`) |
+| GGUF Q4_K_M `qq-judge-gguf-v2.6.7z` | 4.3 GB | GPU or CPU via llama.cpp / Ollama | [Quark drive](https://pan.quark.cn/s/78f66a0809b3) (code `rAfd`) |
+| GGUF Q8_0 `qq-judge-gguf-v2.6-Q8.7z` | 7.3 GB | GPU with ~8 GB VRAM, slightly better than Q4 | [Quark drive](https://pan.quark.cn/s/78f66a0809b3) (code `rAfd`) |
+| OpenVINO INT4 `qq-judge-ov-int4-v2.6.7z` | 3.8 GB | CPU-only, spare VRAM for the main model | [Quark drive](https://pan.quark.cn/s/78f66a0809b3) (code `rAfd`) / [OneDrive](https://1drv.ms/f/c/79b25f680ce98041/IgBE6ppVsc6-QoqY9anjjxVGAT4SAhdMUjmEc50HkGBKOG8?e=Xf7tDC) |
 
 Want a step-by-step "download → run → call it from your bot" walkthrough? See
 [`docs/judge-quickstart.md`](docs/judge-quickstart.md).
 
-### v2.3 numbers
+### v2.6 numbers
 
-v2.3 is a data-quality pass over v2.2. Auditing the v2.2 training set found three problems:
+v2.6 rebuilds the training set around one rule: **labels must describe who a line is
+addressed to, not how it reads.**
 
-- **three generations of names mixed together** — 3,741 rows told the judge the bot was
-  called 萤萤, 223 said 女仆酱, 100 said 小满, while production uses 女仆酱/小蓝;
-- **label imbalance** — 68% positives, which is why v2.2 over-triggered in real chats;
-- **leftover annotation lines** — 192 rows still carried `（续话对象…）` / `（提醒：…）`,
-  the exact lines that were proven to flip the judge's answer.
+- synthetic rows are now verified against the addressee (a positive must actually be aimed at
+  the bot, a negative must not be), so the "owner replying to someone else" rows that poisoned
+  earlier versions are gone;
+- 4,000 rows of real chat replay are mixed back in, filtered for object errors;
+- human corrections are weighted ×5 — but 20% of them are now held out and never trained on.
 
-v2.3 fixes all three: one system prompt, labels at 55:45, hint lines dropped, mis-trigger
-cases weighted ×3, plus 4,000 replay rows from the v3 set to prevent regression.
-7,437 training rows, 1 epoch, lr 5e-5.
+11,794 training rows (50/50), 1 epoch, lr 3e-5, base = the v2.4 merged model.
 
-| Slice | v2.2 | v2.3 |
+| Slice | v2.4 | v2.6 |
 |---|---|---|
-| Short follow-up (120) | 94.2% | **100%** |
+| Clean holdout (300) | 96.7% (2 false replies) | 95.3% (4 false replies) |
 | Multi-party (200) | 100% | 100% |
-| Renamed persona (300) | 94.0% | **97.0%** |
-| Others chatting (300) | 98.0% | 98.3% |
-| Clean holdout (300) | 96.3% (8 false replies) | 96.3% (**4 false replies**) |
+| Short follow-up (120) | 100% | 99.2% |
+| Renamed persona (300) | 97.7% | 96.0% |
+| Others chatting (300) | 98.7% (4 false replies) | 98.7% (4 false replies) |
+| **Human holdout (74, never seen)** | 83.8% (10 false replies) | **95.9% (2 false replies)** |
 
-Overall false replies 17 → 13, missed replies 26 → 19.
+The last row is the one that matters: 74 hand-labelled hard cases that the model has never
+been trained on. v2.6 gains 12 points there while giving up ~1 point on the older slices —
+those slices are largely labelled by previous judges, so they reward agreement with the old
+model rather than correctness.
 
-Hard slices (400 each, deliberately ambiguous, generated separately):
-
-| | v2.2 | v2.3 |
-|---|---|---|
-| Short follow-up | 83.8% (recall 74%) | **99.5% (recall 99.2%)** |
-| Multi-party | 93.5% (recall 87%) | 92.3% (recall 84.5%) |
-
-Both hard slices keep 100% precision — the model errs on the quiet side.
+The three judge versions in one line: v2.3 fixed the data format, v2.4 fixed name confusion
+("is 总管 here?" was answered "yes"), v2.6 fixed the addressee itself.
 
 ### CPU build is the reference — prefer it
 
@@ -189,11 +186,11 @@ GGUF builds**, measured on the same test sets with the same prompt:
 
 | Build | Short follow-up | Multi-party |
 |---|---|---|
-| OpenVINO INT4 (CPU) | **100%** | **100%** / [OneDrive](https://1drv.ms/f/c/79b25f680ce98041/IgBE6ppVsc6-QoqY9anjjxVGAT4SAhdMUjmEc50HkGBKOG8?e=E4lpUc) |
+| OpenVINO INT4 (CPU) | **100%** | **100%** / [OneDrive](https://1drv.ms/f/c/79b25f680ce98041/IgBE6ppVsc6-QoqY9anjjxVGAT4SAhdMUjmEc50HkGBKOG8?e=Xf7tDC) |
 | GGUF Q8_0 (GPU) | 85.8%\* | 99.5%\* |
 | GGUF Q4_K_M (GPU) | 83.3%\* | 99.0%\* |
 
-\* GGUF figures are from the v2.2 build; the v2.3 GGUF files are rebuilt but not re-benchmarked yet, expect the same gap.
+\* GGUF figures are from the v2.2 build; the v2.6 GGUF files are rebuilt but not re-benchmarked yet, expect the same gap.
 
 The gap comes from the runtime, not the weights: the CPU build feeds the raw chat template and
 samples a single token, while the GGUF path goes through `llama-server`'s chat API. **If you have enough RAM (about 8 GB for the model) and a CPU fast enough to judge in roughly
@@ -204,10 +201,10 @@ and needs roughly 8 GB of VRAM.
 Checksums (SHA256):
 
 ```
-adapter (v2.3)   9AC695D0F04B2C61A650C19585B07E7B23A80120D69F947D73C5953A81F7B3F0
-OV INT4 (v2.3)   640E3DCDFC203766A0134042D93771039BBDB542C1702A0F232C231E94BA5608
-GGUF Q4 (v2.3)   56671225D5B41223E6DE3B47FFDFF4DB6A3E23140B133E9067560033700D6276
-GGUF Q8 (v2.3)   421CD11CA45CDC6281801C48B431DEE5E047E09686D1B9A7CB1A2F43DCB12EE7
+adapter (v2.6)   799755AA0EA514B2A1E60133AEB8DB07BD1D064825DFD233929FE640DEB72D20
+OV INT4 (v2.6)   32209AF268DDB4235558838D5C16691B406D980F891EFDA77FB230D954705148
+GGUF Q4 (v2.6)   770C4E006F9982087D9E9688619CE3A4358D7E8A79D2693872565651AFC763C9
+GGUF Q8 (v2.6)   E0CFC64DF242976B5CE662B9A98F11D8285BD1BBDCD70A1FF33986DF2B0B0FBC
 ```
 
 Both model packages ship with `MODEL_CARD.md` (training recipe, evaluation, limitations).
@@ -215,7 +212,7 @@ Both model packages ship with `MODEL_CARD.md` (training recipe, evaluation, limi
 **GGUF (GPU or CPU).** Unpack, then:
 
 ```
-llama-server -m qq-judge-v2.3-Q4_K_M.gguf --port 11448 --jinja -c 4096 -np 1
+llama-server -m qq-judge-v2.6-Q4_K_M.gguf --port 11448 --jinja -c 4096 -np 1
 python scripts/judge_server_gguf.py --port 11447 --backend http://127.0.0.1:11448
 ```
 
